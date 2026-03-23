@@ -1,0 +1,9 @@
+---
+opensearch_version: "2.17.0"
+opensearch_user: opensearch
+opensearch_group: opensearch
+opensearch_home: /opt/opensearch
+opensearch_config_dir: /etc/opensearch
+opensearch_data_dir: /var/lib/opensearch
+opensearch_log_dir: /var/log/opensearch
+opensearch_pid_dir: /var/run/opensearch

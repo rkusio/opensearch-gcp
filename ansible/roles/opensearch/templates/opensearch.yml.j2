@@ -1,0 +1,12 @@
+# OpenSearch configuration template
+# This file is placed as opensearch.yml.tpl and used as reference.
+# The actual opensearch.yml is generated at boot by startup-config.sh
+# based on GCE instance metadata.
+#
+# Metadata keys used:
+#   opensearch-node-role:           master|data|data-hot|coordinator|master+data|dashboards|monitor
+#   opensearch-cluster-name:        cluster name
+#   opensearch-seed-hosts:          comma-separated list of seed host addresses
+#   opensearch-initial-masters:     comma-separated list of initial master node names
+#   opensearch-heap-size:           JVM heap size (e.g. 4g) — auto-detected if not set
+#   opensearch-force-zone-awareness: true|false — force shard replicas across zones

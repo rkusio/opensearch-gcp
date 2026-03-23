@@ -1,0 +1,33 @@
+# Data Prepper pipeline for collecting OpenSearch cluster metrics
+# __DATA_CLUSTER_ENDPOINT__ is replaced at boot by startup-config-prepper.sh
+
+cluster-metrics-pipeline:
+  source:
+    http:
+      path: "/metrics/cluster"
+  processor:
+    - opensearch_api:
+        hosts:
+          - "__DATA_CLUSTER_ENDPOINT__"
+        indices:
+          - endpoint: "/_cluster/health"
+            index: "monitoring-cluster-health"
+            schedule: "rate(1 minute)"
+          - endpoint: "/_cluster/stats"
+            index: "monitoring-cluster-stats"
+            schedule: "rate(1 minute)"
+          - endpoint: "/_nodes/stats"
+            index: "monitoring-node-stats"
+            schedule: "rate(1 minute)"
+          - endpoint: "/_cat/indices?format=json"
+            index: "monitoring-index-stats"
+            schedule: "rate(5 minutes)"
+          - endpoint: "/_cat/shards?format=json"
+            index: "monitoring-shard-stats"
+            schedule: "rate(5 minutes)"
+  sink:
+    - opensearch:
+        hosts:
+          - "https://localhost:9200"
+        insecure: true
+        index_type: custom

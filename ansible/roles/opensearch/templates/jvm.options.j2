@@ -1,0 +1,28 @@
+## JVM configuration for OpenSearch
+## Heap size is set by startup-config.sh based on instance metadata or auto-detection
+
+-Xms__HEAP_SIZE__
+-Xmx__HEAP_SIZE__
+
+## GC configuration
+-XX:+UseG1GC
+-XX:G1ReservePercent=25
+-XX:InitiatingHeapOccupancyPercent=30
+
+## DNS cache
+-Des.networkaddress.cache.ttl=60
+-Des.networkaddress.cache.negative.ttl=10
+
+## Temp directory
+-Djava.io.tmpdir=${OPENSEARCH_TMPDIR}
+
+## Heap dump on OOM
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath={{ opensearch_data_dir }}
+
+## Fatal error log
+-XX:ErrorFile={{ opensearch_log_dir }}/hs_err_pid%p.log
+
+## JDK flags
+-XX:+ExitOnOutOfMemoryError
+--add-opens=java.base/java.io=ALL-UNNAMED

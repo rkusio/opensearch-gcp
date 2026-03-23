@@ -1,0 +1,87 @@
+---
+- name: Create opensearch group
+  ansible.builtin.group:
+    name: "{{ opensearch_group }}"
+    system: true
+
+- name: Create opensearch user
+  ansible.builtin.user:
+    name: "{{ opensearch_user }}"
+    group: "{{ opensearch_group }}"
+    system: true
+    shell: /sbin/nologin
+    home: "{{ opensearch_home }}"
+    create_home: false
+
+- name: Create OpenSearch directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ opensearch_user }}"
+    group: "{{ opensearch_group }}"
+    mode: "0755"
+  loop:
+    - "{{ opensearch_home }}"
+    - "{{ opensearch_config_dir }}"
+    - "{{ opensearch_data_dir }}"
+    - "{{ opensearch_log_dir }}"
+    - "{{ opensearch_pid_dir }}"
+
+- name: Download OpenSearch tarball
+  ansible.builtin.get_url:
+    url: "https://artifacts.opensearch.org/releases/bundle/opensearch/{{ opensearch_version }}/opensearch-{{ opensearch_version }}-linux-x64.tar.gz"
+    dest: "/tmp/opensearch-{{ opensearch_version }}.tar.gz"
+    mode: "0644"
+
+- name: Extract OpenSearch
+  ansible.builtin.unarchive:
+    src: "/tmp/opensearch-{{ opensearch_version }}.tar.gz"
+    dest: "{{ opensearch_home }}"
+    remote_src: true
+    extra_opts:
+      - --strip-components=1
+    owner: "{{ opensearch_user }}"
+    group: "{{ opensearch_group }}"
+
+- name: Clean up tarball
+  ansible.builtin.file:
+    path: "/tmp/opensearch-{{ opensearch_version }}.tar.gz"
+    state: absent
+
+- name: Place JVM options template
+  ansible.builtin.template:
+    src: jvm.options.j2
+    dest: "{{ opensearch_config_dir }}/jvm.options"
+    owner: "{{ opensearch_user }}"
+    group: "{{ opensearch_group }}"
+    mode: "0644"
+
+- name: Place opensearch.yml template (used by startup script)
+  ansible.builtin.template:
+    src: opensearch.yml.j2
+    dest: "{{ opensearch_config_dir }}/opensearch.yml.tpl"
+    owner: "{{ opensearch_user }}"
+    group: "{{ opensearch_group }}"
+    mode: "0644"
+
+- name: Place startup configuration script
+  ansible.builtin.template:
+    src: startup-config.sh.j2
+    dest: "{{ opensearch_home }}/bin/startup-config.sh"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install OpenSearch systemd service
+  ansible.builtin.copy:
+    src: opensearch.service
+    dest: /etc/systemd/system/opensearch.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload systemd
+
+- name: Disable OpenSearch service (startup script enables after config)
+  ansible.builtin.systemd:
+    name: opensearch
+    enabled: false

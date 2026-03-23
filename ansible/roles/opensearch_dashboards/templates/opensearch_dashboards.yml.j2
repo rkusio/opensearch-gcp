@@ -1,0 +1,25 @@
+[Unit]
+Description=OpenSearch Dashboards
+Documentation=https://opensearch.org/docs/latest/dashboards
+Wants=network-online.target
+After=network-online.target opensearch.service
+
+[Service]
+Type=simple
+
+User={{ opensearch_dashboards_user }}
+Group={{ opensearch_dashboards_group }}
+
+ExecStartPre={{ opensearch_dashboards_home }}/bin/startup-config-dashboards.sh
+ExecStart={{ opensearch_dashboards_home }}/bin/opensearch-dashboards
+
+StandardOutput=journal
+StandardError=inherit
+
+LimitNOFILE=65535
+
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

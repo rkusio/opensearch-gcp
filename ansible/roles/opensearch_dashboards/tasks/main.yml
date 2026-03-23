@@ -1,0 +1,54 @@
+---
+- name: Create Dashboards directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ opensearch_dashboards_user }}"
+    group: "{{ opensearch_dashboards_group }}"
+    mode: "0755"
+  loop:
+    - "{{ opensearch_dashboards_home }}"
+    - "{{ opensearch_dashboards_config_dir }}"
+
+- name: Download OpenSearch Dashboards tarball
+  ansible.builtin.get_url:
+    url: "https://artifacts.opensearch.org/releases/bundle/opensearch-dashboards/{{ opensearch_dashboards_version }}/opensearch-dashboards-{{ opensearch_dashboards_version }}-linux-x64.tar.gz"
+    dest: "/tmp/opensearch-dashboards-{{ opensearch_dashboards_version }}.tar.gz"
+    mode: "0644"
+
+- name: Extract OpenSearch Dashboards
+  ansible.builtin.unarchive:
+    src: "/tmp/opensearch-dashboards-{{ opensearch_dashboards_version }}.tar.gz"
+    dest: "{{ opensearch_dashboards_home }}"
+    remote_src: true
+    extra_opts:
+      - --strip-components=1
+    owner: "{{ opensearch_dashboards_user }}"
+    group: "{{ opensearch_dashboards_group }}"
+
+- name: Clean up tarball
+  ansible.builtin.file:
+    path: "/tmp/opensearch-dashboards-{{ opensearch_dashboards_version }}.tar.gz"
+    state: absent
+
+- name: Place Dashboards startup configuration script
+  ansible.builtin.template:
+    src: startup-config-dashboards.sh.j2
+    dest: "{{ opensearch_dashboards_home }}/bin/startup-config-dashboards.sh"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install Dashboards systemd service
+  ansible.builtin.template:
+    src: opensearch_dashboards.yml.j2
+    dest: /etc/systemd/system/opensearch-dashboards.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload systemd dashboards
+
+- name: Disable Dashboards service (startup script enables after config)
+  ansible.builtin.systemd:
+    name: opensearch-dashboards
+    enabled: false

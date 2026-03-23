@@ -1,0 +1,6 @@
+---
+opensearch_dashboards_version: "{{ opensearch_version | default('2.17.0') }}"
+opensearch_dashboards_home: /opt/opensearch-dashboards
+opensearch_dashboards_config_dir: /etc/opensearch-dashboards
+opensearch_dashboards_user: opensearch
+opensearch_dashboards_group: opensearch

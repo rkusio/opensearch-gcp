@@ -1,0 +1,62 @@
+---
+- name: Install required packages
+  ansible.builtin.dnf:
+    name:
+      - jq
+      - curl
+      - unzip
+      - python3
+      - chrony
+      - xfsprogs
+      - google-cloud-cli
+    state: present
+
+- name: Enable and start chronyd
+  ansible.builtin.systemd:
+    name: chronyd
+    enabled: true
+    state: started
+
+- name: Apply sysctl settings for OpenSearch
+  ansible.builtin.copy:
+    src: 99-opensearch.conf
+    dest: /etc/sysctl.d/99-opensearch.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: reload sysctl
+
+- name: Configure security limits for opensearch user
+  ansible.builtin.template:
+    src: limits.conf.j2
+    dest: /etc/security/limits.d/99-opensearch.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Disable swap
+  ansible.builtin.command: swapoff -a
+  changed_when: false
+
+- name: Remove swap from fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: '\sswap\s'
+    state: absent
+
+- name: Configure firewalld for OpenSearch
+  ansible.posix.firewalld:
+    port: "{{ item }}"
+    permanent: true
+    state: enabled
+  loop:
+    - 9200/tcp   # OpenSearch REST
+    - 9300/tcp   # OpenSearch transport
+    - 9600/tcp   # Performance Analyzer
+    - 5601/tcp   # OpenSearch Dashboards
+  notify: reload firewalld
+
+- name: Set SELinux to permissive
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive

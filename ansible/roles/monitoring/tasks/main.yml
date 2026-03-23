@@ -1,0 +1,88 @@
+---
+- name: Create Data Prepper directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - /opt/data-prepper
+    - /etc/data-prepper
+    - /var/log/data-prepper
+
+- name: Download Data Prepper
+  ansible.builtin.get_url:
+    url: "https://artifacts.opensearch.org/data-prepper/{{ data_prepper_version }}/opensearch-data-prepper-{{ data_prepper_version }}-linux-x64.tar.gz"
+    dest: "/tmp/data-prepper-{{ data_prepper_version }}.tar.gz"
+    mode: "0644"
+
+- name: Extract Data Prepper
+  ansible.builtin.unarchive:
+    src: "/tmp/data-prepper-{{ data_prepper_version }}.tar.gz"
+    dest: /opt/data-prepper
+    remote_src: true
+    extra_opts:
+      - --strip-components=1
+
+- name: Clean up tarball
+  ansible.builtin.file:
+    path: "/tmp/data-prepper-{{ data_prepper_version }}.tar.gz"
+    state: absent
+
+- name: Place Data Prepper pipeline template
+  ansible.builtin.template:
+    src: data-prepper-pipeline.yml.j2
+    dest: /etc/data-prepper/pipelines.yml.tpl
+    mode: "0644"
+
+- name: Place Data Prepper startup script
+  ansible.builtin.copy:
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+      METADATA_URL="http://metadata.google.internal/computeMetadata/v1"
+      META_HEADER="Metadata-Flavor: Google"
+      get_metadata() {
+        curl -sf -H "$META_HEADER" "${METADATA_URL}/instance/attributes/$1" 2>/dev/null || echo ""
+      }
+      NODE_ROLE=$(get_metadata "opensearch-node-role")
+      DATA_CLUSTER_ENDPOINT=$(get_metadata "opensearch-data-cluster-endpoint")
+      if [[ "$NODE_ROLE" != "monitor" ]]; then
+        echo "[data-prepper] Not a monitor node, skipping."
+        exit 0
+      fi
+      if [[ -z "$DATA_CLUSTER_ENDPOINT" ]]; then
+        echo "[data-prepper] No data cluster endpoint configured, skipping."
+        exit 0
+      fi
+      sed "s|__DATA_CLUSTER_ENDPOINT__|${DATA_CLUSTER_ENDPOINT}|g" \
+        /etc/data-prepper/pipelines.yml.tpl > /etc/data-prepper/pipelines.yml
+      systemctl enable data-prepper
+    dest: /opt/data-prepper/bin/startup-config-prepper.sh
+    mode: "0755"
+
+- name: Install Data Prepper systemd service
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=OpenSearch Data Prepper
+      After=network-online.target opensearch.service
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      ExecStartPre=/opt/data-prepper/bin/startup-config-prepper.sh
+      ExecStart=/opt/data-prepper/bin/data-prepper run --pipelines /etc/data-prepper/pipelines.yml
+      Restart=on-failure
+      RestartSec=10
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/data-prepper.service
+    mode: "0644"
+
+- name: Disable Data Prepper service (enabled by startup script on monitoring nodes)
+  ansible.builtin.systemd:
+    name: data-prepper
+    enabled: false
