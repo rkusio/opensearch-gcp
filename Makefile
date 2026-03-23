@@ -3,7 +3,7 @@
 PROJECT_ID ?= your-gcp-project-id
 REGION ?= europe-central2
 ZONES ?= europe-central2-a,europe-central2-b,europe-central2-c
-OS_VERSION ?= 2.17.0
+OS_VERSION ?= 3.5.0
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-25s\033[0m %s\n", $$1, $$2}'

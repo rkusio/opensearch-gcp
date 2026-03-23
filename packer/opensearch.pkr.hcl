@@ -30,13 +30,13 @@ variable "region" {
 
 variable "opensearch_version" {
   type        = string
-  default     = "2.17.0"
+  default     = "3.5.0"
   description = "OpenSearch version to install"
 }
 
 variable "data_prepper_version" {
   type        = string
-  default     = "2.9.0"
+  default     = "2.11.0"
   description = "Data Prepper version to install"
 }
 

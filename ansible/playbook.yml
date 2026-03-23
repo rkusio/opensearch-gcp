@@ -3,9 +3,9 @@
   hosts: all
   become: true
   vars:
-    opensearch_version: "{{ opensearch_version | default('2.17.0') }}"
+    opensearch_version: "{{ opensearch_version | default('3.5.0') }}"
     opensearch_dashboards_version: "{{ opensearch_dashboards_version | default(opensearch_version) }}"
-    data_prepper_version: "{{ data_prepper_version | default('2.9.0') }}"
+    data_prepper_version: "{{ data_prepper_version | default('2.11.0') }}"
 
   roles:
     - common

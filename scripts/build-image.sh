@@ -14,8 +14,8 @@ Build a new OpenSearch image using Packer.
 Options:
   --project-id       GCP project ID (required)
   --zone             Build zone (default: europe-central2-a)
-  --os-version       OpenSearch version (default: 2.17.0)
-  --dp-version       Data Prepper version (default: 2.9.0)
+  --os-version       OpenSearch version (default: 3.5.0)
+  --dp-version       Data Prepper version (default: 2.11.0)
   --var-file         Path to variables file (default: packer/variables.pkrvars.hcl)
   --help             Show this help
 EOF
@@ -23,8 +23,8 @@ EOF
 
 PROJECT_ID=""
 ZONE="europe-central2-a"
-OS_VERSION="2.17.0"
-DP_VERSION="2.9.0"
+OS_VERSION="3.5.0"
+DP_VERSION="2.11.0"
 VAR_FILE="${PACKER_DIR}/variables.pkrvars.hcl"
 
 while [[ $# -gt 0 ]]; do

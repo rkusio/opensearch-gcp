@@ -19,7 +19,7 @@ Options:
   --endpoint       OpenSearch endpoint URL (required)
   --region         GCP region (default: europe-central2)
   --zones          Comma-separated zones (default: europe-central2-a,europe-central2-b,europe-central2-c)
-  --os-version     OpenSearch version (default: 2.17.0)
+  --os-version     OpenSearch version (default: 3.5.0)
   --skip-build     Skip image build (use existing latest image)
   --dry-run        Show what would be done without executing
   --help           Show this help
@@ -31,7 +31,7 @@ ENVIRONMENT=""
 ENDPOINT=""
 REGION="europe-central2"
 ZONES="europe-central2-a,europe-central2-b,europe-central2-c"
-OS_VERSION="2.17.0"
+OS_VERSION="3.5.0"
 SKIP_BUILD=false
 DRY_RUN=false
 
